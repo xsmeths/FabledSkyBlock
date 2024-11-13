@@ -5,7 +5,6 @@ import com.craftaro.core.compatibility.MajorServerVersion;
 import com.craftaro.core.compatibility.MethodMapping;
 import com.craftaro.core.compatibility.ServerVersion;
 import com.craftaro.third_party.com.cryptomorin.xseries.XMaterial;
-import com.craftaro.core.utils.BlockUtils;
 import com.craftaro.core.utils.NMSUtils;
 import com.craftaro.skyblock.utils.item.ItemStackUtil;
 import org.bukkit.Bukkit;
@@ -49,7 +48,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("deprecation")
-public final class BlockUtil extends BlockUtils {
+public final class BlockUtil {
     public static BlockData convertBlockToBlockData(Block block, int x, int y, int z) {
         BlockData blockData = new BlockData(block.getType().name(), block.getData(), x, y, z, block.getBiome().toString());
 
@@ -303,7 +302,8 @@ public final class BlockUtil extends BlockUtils {
         }
 
         if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_12)) {
-            setBlockFast(block.getWorld(), block.getX(), block.getY(), block.getZ(), material, blockData.getData());
+            //setBlockFast(block.getWorld(), block.getX(), block.getY(), block.getZ(), material, blockData.getData());
+            block.setBlockData(Bukkit.createBlockData(blockData.getBlockData()), false);
         } else {
             block.setBlockData(Bukkit.getServer().createBlockData(blockData.getBlockData()));
         }
@@ -488,10 +488,13 @@ public final class BlockUtil extends BlockUtils {
             stairs.setFacingDirection(BlockFace.valueOf(blockData.getFacing()));
             state.setData(stairs);
         } else if (blockDataType == BlockDataType.FLOWERPOT) {
-            setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
+            //setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
+            Block bottomBlock = block.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
+            bottomBlock.setType(XMaterial.STONE.parseMaterial(), false);
             if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_8) && MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_12)) {
                 if (block.getLocation().clone().subtract(0.0D, 1.0D, 0.0D).getBlock().getType() == Material.AIR) {
-                    setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
+                    //setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
+                    bottomBlock.setType(XMaterial.STONE.parseMaterial(), false);
                 }
 
                 if (blockData.getFlower() != null && !blockData.getFlower().isEmpty()) {
