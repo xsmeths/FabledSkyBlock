@@ -1,7 +1,5 @@
 package com.craftaro.skyblock.world.generator;
 
-import com.craftaro.core.compatibility.MajorServerVersion;
-import com.craftaro.core.compatibility.ServerVersion;
 import com.craftaro.third_party.com.cryptomorin.xseries.XBiome;
 import com.craftaro.third_party.com.cryptomorin.xseries.XMaterial;
 import com.craftaro.skyblock.SkyBlock;
@@ -38,7 +36,6 @@ public class VoidGenerator extends ChunkGenerator {
         final ConfigurationSection worldSection = configLoad.getConfigurationSection("Island.World");
 
         XBiome biome;
-
         switch (world.getEnvironment()) {
             case NORMAL:
                 biome = Arrays.stream(XBiome.values())
@@ -55,8 +52,7 @@ public class VoidGenerator extends ChunkGenerator {
             default:
                 throw new IllegalStateException("Unexpected value: " + world.getEnvironment());
         }
-
-        setChunkBiome(biome, world, chunkX, chunkZ);
+        setChunkBiome(biome, biomeGrid);
 
         ConfigurationSection section = worldSection.getConfigurationSection(this.islandWorld.getFriendlyName());
 
@@ -67,8 +63,6 @@ public class VoidGenerator extends ChunkGenerator {
                 setBlock(chunkData, XMaterial.WATER.parseMaterial(), section.getInt("Liquid.Height"));
             }
         }
-
-
         return chunkData;
     }
 
@@ -96,7 +90,13 @@ public class VoidGenerator extends ChunkGenerator {
         }
     }
 
-    private void setChunkBiome(XBiome biome, World world, int chunkX, int chunkZ) {
-        biome.setBiome(world.getChunkAt(chunkX, chunkZ));
+    private void setChunkBiome(XBiome biome, BiomeGrid biomeGrid) {
+        org.bukkit.block.Biome bukkitBiome = biome.get();
+
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                biomeGrid.setBiome(x, z, bukkitBiome);
+            }
+        }
     }
 }
