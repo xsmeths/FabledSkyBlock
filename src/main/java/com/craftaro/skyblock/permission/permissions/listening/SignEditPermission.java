@@ -1,18 +1,19 @@
 package com.craftaro.skyblock.permission.permissions.listening;
 
 import com.craftaro.skyblock.SkyBlock;
+import com.craftaro.skyblock.island.Island;
+import com.craftaro.skyblock.island.IslandManager;
 import com.craftaro.skyblock.island.IslandRole;
-import com.craftaro.skyblock.permission.ListeningPermission;
-import com.craftaro.skyblock.permission.PermissionHandler;
-import com.craftaro.skyblock.permission.PermissionType;
+import com.craftaro.skyblock.permission.*;
 import com.craftaro.third_party.com.cryptomorin.xseries.XMaterial;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.SignChangeEvent;
 
 import java.util.HashMap;
-import java.util.Map;
 
-public class SignEditPermission extends ListeningPermission {
+public class SignEditPermission extends ListeningPermission implements Listener {
 
     private final SkyBlock plugin;
 
@@ -28,14 +29,21 @@ public class SignEditPermission extends ListeningPermission {
     }
 
     @PermissionHandler
-    public void onInteract(PlayerInteractEvent event) {
-        if (event.getClickedBlock() == null) {
+    @EventHandler
+    public void onSignChange(SignChangeEvent event) {
+        Player player = event.getPlayer();
+        IslandManager islandManager = plugin.getIslandManager();
+        Island island = islandManager.getIslandAtLocation(event.getBlock().getLocation());
+
+        if (island == null) {
             return;
         }
 
-        Player player = event.getPlayer();
+        PermissionManager permissionManager = plugin.getPermissionManager();
+        BasicPermission EditSign = permissionManager.getPermission("EditSign");
+        boolean hasPermission = permissionManager.hasPermission(player, island, EditSign);
 
-        if (event.getClickedBlock().getType().name().contains("SIGN")) {
+        if (!hasPermission) {
             cancelAndMessage(event, player, this.plugin, this.plugin.getMessageManager());
         }
     }
