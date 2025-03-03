@@ -56,6 +56,7 @@ import com.craftaro.skyblock.menus.admin.Generator;
 import com.craftaro.skyblock.menus.admin.Levelling;
 import com.craftaro.skyblock.message.MessageManager;
 import com.craftaro.skyblock.permission.PermissionManager;
+import com.craftaro.skyblock.permission.permissions.listening.SignEditPermission;
 import com.craftaro.skyblock.placeholder.PlaceholderManager;
 import com.craftaro.skyblock.playerdata.PlayerDataManager;
 import com.craftaro.skyblock.playtime.PlaytimeTask;
@@ -264,6 +265,7 @@ public class SkyBlock extends SongodaPlugin {
         pluginManager.registerEvents(new PistonListeners(this), this);
         pluginManager.registerEvents(new FallBreakListeners(this), this);
         pluginManager.registerEvents(new WorldListeners(this), this);
+        pluginManager.registerEvents(new SignEditPermission(this), this);
 
         if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_13)) {
             pluginManager.registerEvents(new SpongeListeners(this), this);
