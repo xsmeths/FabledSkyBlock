@@ -127,18 +127,26 @@ public class BlockListeners implements Listener {
                 if (material == null) {
                     material = CompatibleMaterial.getMaterial(block.getType()).get();
                 }
-                byte data = block.getData();
+
+                byte data;
+                if (ServerVersion.isServerVersionAtLeast(ServerVersion.V1_13)) {
+                    data = (byte) block.getBlockData().getMaterial().ordinal();
+                } else {
+                    data = block.getData();
+                }
 
                 int droppedAmount;
                 if (event.getPlayer().isSneaking()) {
                     Location dropLoc = blockLocation.clone().add(0.5, 0.5, 0.5);
                     int count = stackable.getSize();
                     droppedAmount = count;
+
                     while (count > 64) {
                         dropLoc.getWorld().dropItemNaturally(dropLoc, new ItemStack(material.parseMaterial(), 64, data));
                         count -= 64;
                     }
-                    dropLoc.getWorld().dropItemNaturally(dropLoc, new ItemStack(material.parseMaterial(), count, block.getData()));
+                    dropLoc.getWorld().dropItemNaturally(dropLoc, new ItemStack(material.parseMaterial(), count, data));
+
                     block.setType(Material.AIR);
                     stackable.setSize(0);
                 } else {
