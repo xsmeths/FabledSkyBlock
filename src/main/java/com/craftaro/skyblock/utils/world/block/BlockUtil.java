@@ -50,7 +50,11 @@ import java.util.stream.Collectors;
 @SuppressWarnings("deprecation")
 public final class BlockUtil {
     public static BlockData convertBlockToBlockData(Block block, int x, int y, int z) {
-        BlockData blockData = new BlockData(block.getType().name(), block.getData(), x, y, z, block.getBiome().toString());
+        byte legacyData = 0;
+        if (!MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_13)) {
+            legacyData = block.getData();
+        }
+        BlockData blockData = new BlockData(block.getType().name(), legacyData, x, y, z, block.getBiome().toString());
 
         blockData.setVersion(Integer.parseInt(ServerVersion.getVersionReleaseNumber()));
 
@@ -59,7 +63,6 @@ public final class BlockUtil {
         }
 
         BlockState blockState = block.getState();
-        MaterialData materialData = blockState.getData();
 
         if (blockState instanceof Banner) {
             Banner banner = (Banner) blockState;
@@ -242,50 +245,53 @@ public final class BlockUtil {
                 }
             }
         }
+        if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_20)) {
+            MaterialData materialData = blockState.getData();
 
-        if (materialData instanceof Stairs) {
-            blockData.setFacing(((Stairs) materialData).getFacing().toString());
-            blockData.setDataType(BlockDataType.STAIRS.toString());
-        } else if (materialData instanceof org.bukkit.material.FlowerPot) {
-            if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_12)) {
-                try {
-                    World world = block.getWorld();
+            if (materialData instanceof Stairs) {
+                blockData.setFacing(((Stairs) materialData).getFacing().toString());
+                blockData.setDataType(BlockDataType.STAIRS.toString());
+            } else if (materialData instanceof org.bukkit.material.FlowerPot) {
+                if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_12)) {
+                    try {
+                        World world = block.getWorld();
 
-                    Class<?> blockPositionClass = ClassMapping.BLOCK_POSITION.getClazz();
+                        Class<?> blockPositionClass = ClassMapping.BLOCK_POSITION.getClazz();
 
-                    Object worldHandle = world.getClass().getMethod("getHandle").invoke(world);
-                    Object blockPosition = blockPositionClass.getConstructor(int.class, int.class, int.class).newInstance(block.getX(), block.getY(), block.getZ());
-                    Object tileEntity = worldHandle.getClass().getMethod("getTileEntity", blockPositionClass).invoke(worldHandle, blockPosition);
+                        Object worldHandle = world.getClass().getMethod("getHandle").invoke(world);
+                        Object blockPosition = blockPositionClass.getConstructor(int.class, int.class, int.class).newInstance(block.getX(), block.getY(), block.getZ());
+                        Object tileEntity = worldHandle.getClass().getMethod("getTileEntity", blockPositionClass).invoke(worldHandle, blockPosition);
 
-                    Field aField = tileEntity.getClass().getDeclaredField("a");
-                    aField.setAccessible(true);
+                        Field aField = tileEntity.getClass().getDeclaredField("a");
+                        aField.setAccessible(true);
 
-                    Object item = aField.get(tileEntity);
+                        Object item = aField.get(tileEntity);
 
-                    if (item != null) {
-                        Object itemStackNMS = ClassMapping.ITEM_STACK.getClazz().getConstructor(ClassMapping.ITEM.getClazz()).newInstance(item);
+                        if (item != null) {
+                            Object itemStackNMS = ClassMapping.ITEM_STACK.getClazz().getConstructor(ClassMapping.ITEM.getClazz()).newInstance(item);
 
-                        ItemStack itemStack = (ItemStack) NMSUtils.getCraftClass("inventory.CraftItemStack").getMethod("asBukkitCopy", itemStackNMS.getClass()).invoke(null, itemStackNMS);
+                            ItemStack itemStack = (ItemStack) NMSUtils.getCraftClass("inventory.CraftItemStack").getMethod("asBukkitCopy", itemStackNMS.getClass()).invoke(null, itemStackNMS);
 
-                        Field fField = tileEntity.getClass().getDeclaredField("f");
-                        fField.setAccessible(true);
+                            Field fField = tileEntity.getClass().getDeclaredField("f");
+                            fField.setAccessible(true);
 
-                        int data = (int) fField.get(tileEntity);
+                            int data = (int) fField.get(tileEntity);
 
-                        blockData.setFlower(itemStack.getType().name() + ":" + data);
+                            blockData.setFlower(itemStack.getType().name() + ":" + data);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else {
-                org.bukkit.material.FlowerPot flowerPot = (org.bukkit.material.FlowerPot) materialData;
+                } else {
+                    org.bukkit.material.FlowerPot flowerPot = (org.bukkit.material.FlowerPot) materialData;
 
-                if (flowerPot.getContents() != null && flowerPot.getContents().getItemType() != XMaterial.AIR.parseMaterial()) {
-                    blockData.setFlower(flowerPot.getContents().getItemType().toString() + ":" + flowerPot.getContents().getData());
+                    if (flowerPot.getContents() != null && flowerPot.getContents().getItemType() != XMaterial.AIR.parseMaterial()) {
+                        blockData.setFlower(flowerPot.getContents().getItemType().toString() + ":" + flowerPot.getContents().getData());
+                    }
                 }
+
+                blockData.setDataType(BlockDataType.FLOWERPOT.toString());
             }
-
-            blockData.setDataType(BlockDataType.FLOWERPOT.toString());
         }
 
         return blockData;
@@ -482,91 +488,92 @@ public final class BlockUtil {
         }
 
         BlockDataType blockDataType = BlockDataType.valueOf(blockData.getDataType());
+        if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_20)) {
+            if (blockDataType == BlockDataType.STAIRS) {
+                Stairs stairs = (Stairs) state.getData();
+                stairs.setFacingDirection(BlockFace.valueOf(blockData.getFacing()));
+                state.setData(stairs);
+            } else if (blockDataType == BlockDataType.FLOWERPOT) {
+                //setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
+                Block bottomBlock = block.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
+                bottomBlock.setType(XMaterial.STONE.parseMaterial(), false);
+                if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_8) && MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_12)) {
+                    if (block.getLocation().clone().subtract(0.0D, 1.0D, 0.0D).getBlock().getType() == Material.AIR) {
+                        //setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
+                        bottomBlock.setType(XMaterial.STONE.parseMaterial(), false);
+                    }
 
-        if (blockDataType == BlockDataType.STAIRS) {
-            Stairs stairs = (Stairs) state.getData();
-            stairs.setFacingDirection(BlockFace.valueOf(blockData.getFacing()));
-            state.setData(stairs);
-        } else if (blockDataType == BlockDataType.FLOWERPOT) {
-            //setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
-            Block bottomBlock = block.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
-            bottomBlock.setType(XMaterial.STONE.parseMaterial(), false);
-            if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_8) && MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_12)) {
-                if (block.getLocation().clone().subtract(0.0D, 1.0D, 0.0D).getBlock().getType() == Material.AIR) {
-                    //setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
-                    bottomBlock.setType(XMaterial.STONE.parseMaterial(), false);
-                }
+                    if (blockData.getFlower() != null && !blockData.getFlower().isEmpty()) {
+                        try {
+                            String[] flower = blockData.getFlower().split(":");
+                            int materialData = Integer.parseInt(flower[1]);
 
-                if (blockData.getFlower() != null && !blockData.getFlower().isEmpty()) {
-                    try {
+                            materialStr = flower[0].toUpperCase();
+
+                            ItemStack is = new ItemStack(Material.getMaterial(materialStr), 1, (byte) materialData);
+
+                            World world = block.getWorld();
+
+                            Class<?> blockPositionClass = ClassMapping.BLOCK_POSITION.getClazz();
+
+                            Object worldHandle = MethodMapping.CB_GENERIC__GET_HANDLE.getMethod(world.getClass()).invoke(world);
+                            Object blockPosition = blockPositionClass.getConstructor(int.class, int.class, int.class).newInstance(block.getX(), block.getY(), block.getZ());
+                            Object tileEntity = worldHandle.getClass().getMethod("getTileEntity", blockPositionClass).invoke(worldHandle, blockPosition);
+                            Object itemStack = MethodMapping.CB_ITEM_STACK__AS_NMS_COPY.getMethod(ClassMapping.CRAFT_ITEM_STACK.getClazz()).invoke(null, is);
+                            Object item = itemStack.getClass().getMethod("getItem").invoke(itemStack);
+                            Object data = itemStack.getClass().getMethod("getData").invoke(itemStack);
+
+                            Field aField = tileEntity.getClass().getDeclaredField("a");
+                            aField.setAccessible(true);
+                            aField.set(tileEntity, item);
+
+                            Field fField = tileEntity.getClass().getDeclaredField("f");
+                            fField.setAccessible(true);
+                            fField.set(tileEntity, data);
+
+                            tileEntity.getClass().getMethod("update").invoke(tileEntity);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+                    if (blockData.getFlower() != null && !blockData.getFlower().isEmpty()) {
+                        org.bukkit.material.FlowerPot flowerPot = (org.bukkit.material.FlowerPot) state.getData();
                         String[] flower = blockData.getFlower().split(":");
-                        int materialData = Integer.parseInt(flower[1]);
+                        materialStr = null;
 
-                        materialStr = flower[0].toUpperCase();
-
-                        ItemStack is = new ItemStack(Material.getMaterial(materialStr), 1, (byte) materialData);
-
-                        World world = block.getWorld();
-
-                        Class<?> blockPositionClass = ClassMapping.BLOCK_POSITION.getClazz();
-
-                        Object worldHandle = MethodMapping.CB_GENERIC__GET_HANDLE.getMethod(world.getClass()).invoke(world);
-                        Object blockPosition = blockPositionClass.getConstructor(int.class, int.class, int.class).newInstance(block.getX(), block.getY(), block.getZ());
-                        Object tileEntity = worldHandle.getClass().getMethod("getTileEntity", blockPositionClass).invoke(worldHandle, blockPosition);
-                        Object itemStack = MethodMapping.CB_ITEM_STACK__AS_NMS_COPY.getMethod(ClassMapping.CRAFT_ITEM_STACK.getClazz()).invoke(null, is);
-                        Object item = itemStack.getClass().getMethod("getItem").invoke(itemStack);
-                        Object data = itemStack.getClass().getMethod("getData").invoke(itemStack);
-
-                        Field aField = tileEntity.getClass().getDeclaredField("a");
-                        aField.setAccessible(true);
-                        aField.set(tileEntity, item);
-
-                        Field fField = tileEntity.getClass().getDeclaredField("f");
-                        fField.setAccessible(true);
-                        fField.set(tileEntity, data);
-
-                        tileEntity.getClass().getMethod("update").invoke(tileEntity);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            } else {
-                if (blockData.getFlower() != null && !blockData.getFlower().isEmpty()) {
-                    org.bukkit.material.FlowerPot flowerPot = (org.bukkit.material.FlowerPot) state.getData();
-                    String[] flower = blockData.getFlower().split(":");
-                    materialStr = null;
-
-                    if (blockData.getVersion() > 12) {
-                        if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_13)) {
-                            materialStr = flower[0].toUpperCase();
+                        if (blockData.getVersion() > 12) {
+                            if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_13)) {
+                                materialStr = flower[0].toUpperCase();
+                            }
+                        } else {
+                            if (MajorServerVersion.isServerVersionBelow(MajorServerVersion.V1_13)) {
+                                materialStr = flower[0].toUpperCase();
+                            }
                         }
-                    } else {
-                        if (MajorServerVersion.isServerVersionBelow(MajorServerVersion.V1_13)) {
-                            materialStr = flower[0].toUpperCase();
+
+                        if (materialStr != null) {
+                            flowerPot.setContents(new MaterialData(Material.getMaterial(materialStr), (byte) Integer.parseInt(flower[1])));
                         }
-                    }
 
-                    if (materialStr != null) {
-                        flowerPot.setContents(new MaterialData(Material.getMaterial(materialStr), (byte) Integer.parseInt(flower[1])));
+                        state.setData(flowerPot);
                     }
-
-                    state.setData(flowerPot);
                 }
             }
-        }
 
-        if ("DOUBLE_PLANT".equals(materialStr)) {
-            Block topBlock = block.getLocation().add(0.0D, 1.0D, 0.0D).getBlock();
-            Block bottomBlock = block.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
+            if ("DOUBLE_PLANT".equals(materialStr)) {
+                Block topBlock = block.getLocation().add(0.0D, 1.0D, 0.0D).getBlock();
+                Block bottomBlock = block.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
 
-            if (bottomBlock.getType() == Material.AIR && !topBlock.getType().name().equals("DOUBLE_PLANT")) {
-                bottomBlock.setType(XMaterial.LARGE_FERN.parseMaterial());
+                if (bottomBlock.getType() == Material.AIR && !topBlock.getType().name().equals("DOUBLE_PLANT")) {
+                    bottomBlock.setType(XMaterial.LARGE_FERN.parseMaterial());
 
-                if (MajorServerVersion.isServerVersionBelow(MajorServerVersion.V1_13)) {
-                    try {
-                        bottomBlock.getClass().getMethod("setData", byte.class).invoke(bottomBlock, (byte) 2);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                    if (MajorServerVersion.isServerVersionBelow(MajorServerVersion.V1_13)) {
+                        try {
+                            bottomBlock.getClass().getMethod("setData", byte.class).invoke(bottomBlock, (byte) 2);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                     }
                 }
             }
