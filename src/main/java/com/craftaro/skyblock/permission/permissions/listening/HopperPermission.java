@@ -1,6 +1,7 @@
 package com.craftaro.skyblock.permission.permissions.listening;
 
 import com.craftaro.core.compatibility.CompatibleMaterial;
+import com.craftaro.third_party.com.cryptomorin.xseries.XEntityType;
 import com.craftaro.third_party.com.cryptomorin.xseries.XMaterial;
 import com.craftaro.skyblock.SkyBlock;
 import com.craftaro.skyblock.message.MessageManager;
@@ -40,7 +41,7 @@ public class HopperPermission extends ListeningPermission {
 
     @PermissionHandler
     public void onInteractEntity(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked().getType() == EntityType.MINECART_HOPPER) {
+        if (event.getRightClicked().getType() == XEntityType.HOPPER_MINECART.get()) {
             cancelAndMessage(event, event.getPlayer(), this.plugin, this.messageManager);
         }
     }

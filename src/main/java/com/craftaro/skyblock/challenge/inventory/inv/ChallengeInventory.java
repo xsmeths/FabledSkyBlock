@@ -1,5 +1,6 @@
 package com.craftaro.skyblock.challenge.inventory.inv;
 
+import com.craftaro.third_party.com.cryptomorin.xseries.XEnchantment;
 import com.craftaro.third_party.com.cryptomorin.xseries.XSound;
 import com.craftaro.skyblock.challenge.FabledChallenge;
 import com.craftaro.skyblock.challenge.challenge.Challenge;
@@ -80,7 +81,7 @@ public class ChallengeInventory implements InventoryProvider {
                 ItemStack is = ic.createItem(inv.getPlayer().getUniqueId(), count);
                 // If challenge is done, add enchantment to show to player that it's done
                 if (count >= c.getMaxTimes()) {
-                    is.addUnsafeEnchantment(Enchantment.OXYGEN, 1);
+                    is.addUnsafeEnchantment(XEnchantment.RESPIRATION.get(), 1);
                 }
                 ItemMeta im = is.getItemMeta();
                 im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -104,7 +105,7 @@ public class ChallengeInventory implements InventoryProvider {
                         ItemStack is2 = ic.createItem(inv.getPlayer().getUniqueId(), count2);
                         // If challenge is done, add enchantment to show to player that it's done
                         if (count2 >= c.getMaxTimes()) {
-                            is2.addUnsafeEnchantment(Enchantment.OXYGEN, 1);
+                            is2.addUnsafeEnchantment(XEnchantment.RESPIRATION.get(), 1);
                         }
                         ItemMeta im2 = is2.getItemMeta();
                         im2.addItemFlags(ItemFlag.HIDE_ENCHANTS);

@@ -4,6 +4,7 @@ import com.craftaro.core.compatibility.CompatibleMaterial;
 import com.craftaro.core.compatibility.MajorServerVersion;
 import com.craftaro.core.compatibility.ServerVersion;
 import com.craftaro.core.utils.SkullItemCreator;
+import com.craftaro.third_party.com.cryptomorin.xseries.XItemFlag;
 import com.craftaro.third_party.com.cryptomorin.xseries.XMaterial;
 import com.craftaro.third_party.com.cryptomorin.xseries.XSound;
 import com.craftaro.core.utils.ItemUtils;
@@ -217,7 +218,7 @@ public class Levelling {
         nInv.addItem(nInv.createItem(XMaterial.OAK_FENCE_GATE.parseItem(), configLoad.getString("Menu.Levelling.Item.Exit.Displayname"), null, null, null, null), 0, 8);
         if (player.hasPermission("fabledskyblock.island.level.rescan")) {
             nInv.addItem(nInv.createItem(XMaterial.FIREWORK_STAR.parseItem(), configLoad.getString("Menu.Levelling.Item.Rescan.Displayname"), configLoad.getStringList("Menu.Levelling.Item.Rescan.Lore"), null, null,
-                    new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 3, 5);
+                    new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 3, 5);
         }
         nInv.addItem(
                 nInv.createItem(new ItemStack(Material.PAINTING), configLoad.getString("Menu.Levelling.Item.Statistics.Displayname"), configLoad.getStringList("Menu.Levelling.Item.Statistics.Lore"),

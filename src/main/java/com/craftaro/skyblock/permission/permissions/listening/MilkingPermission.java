@@ -32,7 +32,7 @@ public class MilkingPermission extends ListeningPermission {
             if (XMaterial.BUCKET.isSimilar(player.getItemInHand())) {
                 cancelAndMessage(event, player, this.plugin, this.messageManager);
             }
-        } else if (entity.getType() == EntityType.MUSHROOM_COW) {
+        } else if (entity.getType().toString().equals("MUSHROOM_COW") || entity.getType().toString().equals("MOOSHROOM")) {
             if (XMaterial.BUCKET.isSimilar(player.getItemInHand())
                     || XMaterial.BOWL.isSimilar(player.getItemInHand())) {
                 cancelAndMessage(event, player, this.plugin, this.messageManager);

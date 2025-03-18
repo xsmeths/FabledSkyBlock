@@ -4,6 +4,7 @@ import com.craftaro.skyblock.SkyBlock;
 import com.craftaro.skyblock.config.FileManager;
 import com.craftaro.skyblock.island.Island;
 import com.craftaro.skyblock.island.IslandManager;
+import com.craftaro.third_party.com.cryptomorin.xseries.XPotion;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -194,7 +195,7 @@ public class UpgradeManager {
             for (PotionEffect potionEffect : potionEffects) {
                 if (potionEffect.getType().equals(PotionEffectType.SPEED)) {
                     speed = potionEffect;
-                } else if (potionEffect.getType().equals(PotionEffectType.JUMP)) {
+                } else if (potionEffect.getType().equals(XPotion.JUMP_BOOST.get())) {
                     jump = potionEffect;
                 }
                 if (speed != null && jump != null) {
@@ -217,9 +218,9 @@ public class UpgradeManager {
             List<Upgrade> jumpUpgrades = upgradeManager.getUpgrades(Upgrade.Type.JUMP);
             if (jumpUpgrades != null && !jumpUpgrades.isEmpty() && jumpUpgrades.get(0).isEnabled() && island.isUpgrade(Upgrade.Type.JUMP)) {
                 if (jump == null) {
-                    jump = new PotionEffect(PotionEffectType.JUMP, 60, 1);
+                    jump = new PotionEffect(XPotion.JUMP_BOOST.getPotionEffectType(), 60, 1);
                 } else if (jump.getAmplifier() == 1 && jump.getDuration() < 60) {
-                    jump = new PotionEffect(PotionEffectType.JUMP, jump.getDuration() + 21, 1);
+                    jump = new PotionEffect(XPotion.JUMP_BOOST.getPotionEffectType(), jump.getDuration() + 21, 1);
                 }
                 player.addPotionEffect(jump, true);
                 player.addPotionEffect(jump);

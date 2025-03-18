@@ -12,6 +12,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.SkullType;
 import org.bukkit.World;
 import org.bukkit.block.Banner;
@@ -45,6 +47,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("deprecation")
@@ -327,7 +330,11 @@ public final class BlockUtil {
 
             for (String patternList : blockData.getPatterns()) {
                 String[] pattern = patternList.split(":");
-                banner.addPattern(new Pattern(DyeColor.valueOf(pattern[1].toUpperCase()), PatternType.valueOf(pattern[0].toUpperCase())));
+                if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_20)) {
+                    banner.addPattern(new Pattern(DyeColor.valueOf(pattern[1].toUpperCase()), PatternType.valueOf(pattern[0].toUpperCase())));
+                } else {
+                    banner.addPattern(new Pattern(DyeColor.valueOf(pattern[1].toUpperCase()), Registry.BANNER_PATTERN.get(NamespacedKey.fromString(pattern[0].toUpperCase()))));
+                }
             }
             state.update();
         } else if (blockTypeState == BlockStateType.BEACON) {
