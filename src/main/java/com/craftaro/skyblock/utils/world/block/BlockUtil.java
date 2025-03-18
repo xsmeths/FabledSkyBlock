@@ -14,7 +14,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
-import org.bukkit.SkullType;
 import org.bukkit.World;
 import org.bukkit.block.Banner;
 import org.bukkit.block.Barrel;
@@ -36,18 +35,16 @@ import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.Sign;
 import org.bukkit.block.Skull;
 import org.bukkit.block.banner.Pattern;
-import org.bukkit.block.banner.PatternType;
 import org.bukkit.block.data.type.RespawnAnchor;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
-import org.bukkit.material.Stairs;
 import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("deprecation")
@@ -249,12 +246,19 @@ public final class BlockUtil {
             }
         }
         if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_20)) {
-            MaterialData materialData = blockState.getData();
-
-            if (materialData instanceof Stairs) {
-                blockData.setFacing(((Stairs) materialData).getFacing().toString());
+            Object materialData = legacyBlockRelfection.getLegacyMaterialData(blockState);
+            if (materialData != null && materialData.getClass().getSimpleName().equalsIgnoreCase("Stairs")) {
+                legacyBlockRelfection.setLegacyStairsFacing(materialData, BlockFace.valueOf(blockData.getFacing()));
+                try {
+                    blockState.getClass().getMethod("setData", materialData.getClass()).invoke(blockState, materialData);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                //if (materialData instanceof org.bukkit.material.Stairs) {
+                //blockData.setFacing(((org.bukkit.material.Stairs) materialData).getFacing().toString());
                 blockData.setDataType(BlockDataType.STAIRS.toString());
-            } else if (materialData instanceof org.bukkit.material.FlowerPot) {
+            } else if (materialData != null && materialData.getClass().getSimpleName().equalsIgnoreCase("FlowerPot")) {
+                //} else if (materialData instanceof org.bukkit.material.FlowerPot) {
                 if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_12)) {
                     try {
                         World world = block.getWorld();
@@ -262,7 +266,8 @@ public final class BlockUtil {
                         Class<?> blockPositionClass = ClassMapping.BLOCK_POSITION.getClazz();
 
                         Object worldHandle = world.getClass().getMethod("getHandle").invoke(world);
-                        Object blockPosition = blockPositionClass.getConstructor(int.class, int.class, int.class).newInstance(block.getX(), block.getY(), block.getZ());
+                        Object blockPosition = blockPositionClass.getConstructor(int.class, int.class, int.class)
+                                .newInstance(block.getX(), block.getY(), block.getZ());
                         Object tileEntity = worldHandle.getClass().getMethod("getTileEntity", blockPositionClass).invoke(worldHandle, blockPosition);
 
                         Field aField = tileEntity.getClass().getDeclaredField("a");
@@ -286,11 +291,28 @@ public final class BlockUtil {
                         e.printStackTrace();
                     }
                 } else {
-                    org.bukkit.material.FlowerPot flowerPot = (org.bukkit.material.FlowerPot) materialData;
-
-                    if (flowerPot.getContents() != null && flowerPot.getContents().getItemType() != XMaterial.AIR.parseMaterial()) {
-                        blockData.setFlower(flowerPot.getContents().getItemType().toString() + ":" + flowerPot.getContents().getData());
+                    Object contents = legacyBlockRelfection.getLegacyFlowerPotContents(materialData);
+                    if (contents != null) {
+                        try {
+                            // Assume getItemType() returns a Material
+                            Method getItemTypeMethod = contents.getClass().getMethod("getItemType");
+                            Object typeObj = getItemTypeMethod.invoke(contents);
+                            Material type = (Material) typeObj;
+                            if (type != null && !type.equals(XMaterial.AIR.parseMaterial())) {
+                                Method getDataMethod = contents.getClass().getMethod("getData");
+                                Object dataObj = getDataMethod.invoke(contents);
+                                byte data = (dataObj instanceof Number) ? ((Number) dataObj).byteValue() : 0;
+                                blockData.setFlower(type.toString() + ":" + data);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
+                    //org.bukkit.material.FlowerPot flowerPot = (org.bukkit.material.FlowerPot) materialData;
+
+                    //if (flowerPot.getContents() != null && flowerPot.getContents().getItemType() != XMaterial.AIR.parseMaterial()) {
+                        //blockData.setFlower(flowerPot.getContents().getItemType().toString() + ":" + flowerPot.getContents().getData());
+                    //}
                 }
 
                 blockData.setDataType(BlockDataType.FLOWERPOT.toString());
@@ -331,7 +353,9 @@ public final class BlockUtil {
             for (String patternList : blockData.getPatterns()) {
                 String[] pattern = patternList.split(":");
                 if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_20)) {
-                    banner.addPattern(new Pattern(DyeColor.valueOf(pattern[1].toUpperCase()), PatternType.valueOf(pattern[0].toUpperCase())));
+                    Object patternType = legacyBlockRelfection.getPatternType(pattern[0]);
+                    banner.addPattern(new Pattern(DyeColor.valueOf(pattern[1].toUpperCase()), (org.bukkit.block.banner.PatternType) patternType));
+//                    banner.addPattern(new Pattern(DyeColor.valueOf(pattern[1].toUpperCase()), PatternType.valueOf(pattern[0].toUpperCase())));
                 } else {
                     banner.addPattern(new Pattern(DyeColor.valueOf(pattern[1].toUpperCase()), Registry.BANNER_PATTERN.get(NamespacedKey.fromString(pattern[0].toUpperCase()))));
                 }
@@ -434,7 +458,13 @@ public final class BlockUtil {
             Skull skull = (Skull) state;
 
             skull.setRotation(BlockFace.valueOf(blockData.getRotateFace().toUpperCase()));
-            skull.setSkullType(SkullType.valueOf(blockData.getSkullType().toUpperCase()));
+
+            if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_20)) {
+                skull.setSkullType(org.bukkit.SkullType.valueOf(blockData.getSkullType().toUpperCase()));
+                //skull.setSkullType(org.bukkit.SkullType.valueOf(blockData.getSkullType().toUpperCase()));
+            } else {
+                skull.setType(XMaterial.valueOf(blockData.getSkullType().toUpperCase()).get());
+            }
 
             if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_10)) {
                 skull.setOwningPlayer(Bukkit.getServer().getOfflinePlayer(blockData.getSkullOwner()));
@@ -497,9 +527,18 @@ public final class BlockUtil {
         BlockDataType blockDataType = BlockDataType.valueOf(blockData.getDataType());
         if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_20)) {
             if (blockDataType == BlockDataType.STAIRS) {
-                Stairs stairs = (Stairs) state.getData();
-                stairs.setFacingDirection(BlockFace.valueOf(blockData.getFacing()));
-                state.setData(stairs);
+                Object legacyMaterialData = legacyBlockRelfection.getLegacyMaterialData(state);
+                if (legacyMaterialData != null && legacyMaterialData.getClass().getSimpleName().equalsIgnoreCase("Stairs")) {
+                    legacyBlockRelfection.setLegacyStairsFacing(legacyMaterialData, BlockFace.valueOf(blockData.getFacing()));
+                    try {
+                        state.getClass().getMethod("setData", legacyMaterialData.getClass()).invoke(state, legacyMaterialData);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+//                org.bukkit.material.Stairs stairs = (org.bukkit.material.Stairs) state.getData();
+//                stairs.setFacingDirection(BlockFace.valueOf(blockData.getFacing()));
+//                state.setData(stairs);
             } else if (blockDataType == BlockDataType.FLOWERPOT) {
                 //setBlockFast(block.getWorld(), block.getX(), block.getY() - 1, block.getZ(), XMaterial.STONE, (byte) 0);
                 Block bottomBlock = block.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
@@ -545,7 +584,8 @@ public final class BlockUtil {
                     }
                 } else {
                     if (blockData.getFlower() != null && !blockData.getFlower().isEmpty()) {
-                        org.bukkit.material.FlowerPot flowerPot = (org.bukkit.material.FlowerPot) state.getData();
+                        Object flowerPot = legacyBlockRelfection.getLegacyMaterialData(state);
+                        //org.bukkit.material.FlowerPot flowerPot = (org.bukkit.material.FlowerPot) state.getData();
                         String[] flower = blockData.getFlower().split(":");
                         materialStr = null;
 
@@ -560,10 +600,16 @@ public final class BlockUtil {
                         }
 
                         if (materialStr != null) {
-                            flowerPot.setContents(new MaterialData(Material.getMaterial(materialStr), (byte) Integer.parseInt(flower[1])));
+                            try {
+                                Object newFlowerPot = legacyBlockRelfection.createLegacyFlowerPot(Material.getMaterial(materialStr), (byte) Integer.parseInt(flower[1]));
+                                Method setDataMethod = state.getClass().getMethod("setData", newFlowerPot.getClass());
+                                setDataMethod.invoke(state, newFlowerPot);
+                            } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
+                            //flowerPot.setContents(new org.bukkit.material.MaterialData(Material.getMaterial(materialStr), (byte) Integer.parseInt(flower[1])));
                         }
-
-                        state.setData(flowerPot);
+                        //state.setData(flowerPot);
                     }
                 }
             }
