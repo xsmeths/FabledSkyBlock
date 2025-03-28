@@ -1,5 +1,6 @@
 package com.craftaro.skyblock.api.island;
 
+import com.craftaro.core.compatibility.ServerVersion;
 import com.craftaro.skyblock.api.SkyBlockAPI;
 import com.craftaro.skyblock.api.ban.Ban;
 import com.craftaro.skyblock.api.utils.APIUtil;
@@ -15,6 +16,7 @@ import org.bukkit.WeatherType;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,6 +100,35 @@ public class Island {
         Preconditions.checkArgument(environment != null, "World in environment null does not exist");
 
         return this.handle.getLocation(APIUtil.toImplementation(world), APIUtil.toImplementation(environment));
+    }
+
+    /**
+     * Check if the Location is inside the Island
+     * @param location The location to check
+     * @return true if the location is inside the Island, false otherwise
+     */
+    public boolean isInsideIsland(Location location) {
+        return this.handle.isInsideIsland(location);
+    }
+
+    /**
+     * Gets the maximum coordinate point of the island in a specific world
+     *
+     * @param world The world to get coordinates for
+     * @return Location representing the maximum point, or null if island location not found
+     */
+    public @Nullable Location getIslandMax(IslandWorld world) {
+        return this.handle.getIslandMax(APIUtil.toImplementation(world));
+    }
+
+    /**
+     * Gets the minimum coordinate point of the island in a specific world
+     *
+     * @param world The world to get coordinates for
+     * @return Location representing the minimum point, or null if island location not found
+     */
+    public @Nullable Location getIslandMin(IslandWorld world) {
+        return this.handle.getIslandMin(APIUtil.toImplementation(world));
     }
 
     /**
