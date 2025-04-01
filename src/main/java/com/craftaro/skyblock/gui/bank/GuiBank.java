@@ -40,7 +40,7 @@ public class GuiBank extends Gui {
         updateItem(13, // Balance
                 TextUtils.formatText(this.languageLoad.getString("Menu.Bank.Item.Balance.Displayname")),
                 TextUtils.formatText(this.languageLoad.getString("Menu.Bank.Item.Balance.Lore")
-                        .replace("%balance", String.valueOf(this.island.getBankBalance()))));
+                        .replace("%balance",  String.format("%,.2f", this.island.getBankBalance()))));
         super.onOpen(manager, player);
     }
 
@@ -75,10 +75,14 @@ public class GuiBank extends Gui {
         setItem(13, GuiUtils.createButtonItem(XMaterial.GOLD_INGOT, // Balance
                 TextUtils.formatText(this.languageLoad.getString("Menu.Bank.Item.Balance.Displayname")),
                 TextUtils.formatText(this.languageLoad.getString("Menu.Bank.Item.Balance.Lore")
-                        .replace("%balance", String.valueOf(this.island.getBankBalance())))));
+                        .replace("%balance", formatBalance(this.island.getBankBalance())))));
 
         setButton(16, GuiUtils.createButtonItem(XMaterial.RED_DYE, // Withdraw
                 TextUtils.formatText(this.languageLoad.getString("Menu.Bank.Item.Withdraw.Displayname"))), (event) ->
                 this.guiManager.showGUI(event.player, new GuiBankSelector(this.plugin, this.island, this, GuiBankSelector.Type.WITHDRAW, this.admin)));
+    }
+
+    private String formatBalance(double balance) {
+        return String.format("%,.2f", balance);
     }
 }
