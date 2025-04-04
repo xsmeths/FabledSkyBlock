@@ -1,5 +1,6 @@
 package com.craftaro.skyblock.island;
 
+import com.craftaro.core.compatibility.ServerVersion;
 import com.craftaro.core.nms.world.NmsWorldBorder;
 import com.craftaro.third_party.com.cryptomorin.xseries.XBiome;
 import com.craftaro.third_party.com.cryptomorin.xseries.XSound;
@@ -36,6 +37,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -1035,10 +1037,77 @@ public class Island {
         this.removeWhitelistedPlayer(player.getUniqueId());
     }
 
+    public boolean isInsideIsland(Location location) {
+        WorldManager worldManager = this.plugin.getWorldManager();
+        IslandWorld islandWorld = worldManager.getIslandWorld(location.getWorld());
+
+        if (islandWorld == null) {
+            return false;
+        }
+
+        Location islandLocation = getLocation(islandWorld, IslandEnvironment.ISLAND);
+
+        if (islandLocation == null) {
+            return false;
+        }
+
+        double radius = getRadius();
+        double halfSize = Math.floor(radius);
+
+        return location.getBlockX() <= (islandLocation.getBlockX() + halfSize) &&
+                location.getBlockX() >= (islandLocation.getBlockX() - halfSize - 1) &&
+                location.getBlockZ() <= (islandLocation.getBlockZ() + halfSize) &&
+                location.getBlockZ() >= (islandLocation.getBlockZ() - halfSize - 1);
+    }
+
+    /**
+     * Gets the maximum coordinate point of the island in a specific world
+     *
+     * @param world The world to get coordinates for
+     * @return Location representing the maximum point, or null if island location not found
+     */
+    public @Nullable Location getIslandMax(IslandWorld world) {
+        Location islandLocation = getLocation(world, IslandEnvironment.ISLAND);
+        if (islandLocation == null) {
+            return null;
+        }
+
+        double halfSize = Math.floor(getRadius());
+        return new Location(
+                islandLocation.getWorld(),
+                islandLocation.getBlockX() + halfSize,
+                ServerVersion.isServerVersionAtLeast(ServerVersion.V1_18) ? islandLocation.getWorld().getMaxHeight() : 256,
+                islandLocation.getBlockZ() + halfSize
+        );
+    }
+
+    /**
+     * Gets the minimum coordinate point of the island in a specific world
+     *
+     * @param world The world to get coordinates for
+     * @return Location representing the minimum point, or null if island location not found
+     */
+    public @Nullable Location getIslandMin(IslandWorld world) {
+        Location islandLocation = getLocation(world, IslandEnvironment.ISLAND);
+        if (islandLocation == null) {
+            return null;
+        }
+
+        double halfSize = Math.floor(getRadius());
+        return new Location(
+                islandLocation.getWorld(),
+                islandLocation.getBlockX() - halfSize - 1,
+                ServerVersion.isServerVersionAtLeast(ServerVersion.V1_18) ? islandLocation.getWorld().getMinHeight() : 0,
+                islandLocation.getBlockZ() - halfSize - 1
+        );
+    }
+
     @Override
     public String toString() {
         return "Island{" +
                 "ownerUUID=" + this.ownerUUID +
                 '}';
     }
+
+
 }

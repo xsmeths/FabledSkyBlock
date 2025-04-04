@@ -33,7 +33,7 @@ create a thread over on [our Discord server][Discord invite].
 
 
 [Plugin page]: https://songoda.com/product/13
-[Plugin wiki]: https://songoda.notion.site/FabledSkyBlock-def1e06fa65e4106998202b97020c183
+[Plugin wiki]: https://wiki.songoda.com/FabledSkyBlock-1130f1089702818c94b7ccf68960e160
 [Discord invite]: https://discord.gg/7TXM8xr2Ng
 
 [Discord shield]: https://img.shields.io/discord/1214289374506917889?color=5865F2&label=Discord&logo=discord&logoColor=5865F2
