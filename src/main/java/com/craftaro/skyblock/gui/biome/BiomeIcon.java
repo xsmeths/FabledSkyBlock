@@ -2,6 +2,7 @@ package com.craftaro.skyblock.gui.biome;
 
 import com.craftaro.core.compatibility.CompatibleMaterial;
 import com.craftaro.third_party.com.cryptomorin.xseries.XBiome;
+import com.craftaro.third_party.com.cryptomorin.xseries.XEnchantment;
 import com.craftaro.third_party.com.cryptomorin.xseries.XMaterial;
 import com.craftaro.skyblock.SkyBlock;
 import org.bukkit.ChatColor;
@@ -62,7 +63,7 @@ public class BiomeIcon {
     public void enchant() {
         ItemMeta im = this.displayItem.getItemMeta();
         if (im != null) {
-            im.addEnchant(Enchantment.DURABILITY, 1, true);
+            im.addEnchant(XEnchantment.UNBREAKING.get(), 1, true);
             im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             this.displayItem.setItemMeta(im);
         }

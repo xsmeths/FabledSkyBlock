@@ -424,7 +424,7 @@ public class Settings {
                     }
 
                     nInv.addItemStack(createItem(island, role, "Destroy", new ItemStack(Material.DIAMOND_PICKAXE)), 9);
-                    nInv.addItemStack(createItem(island, role, "Place", new ItemStack(Material.GRASS)), 10);
+                    nInv.addItemStack(createItem(island, role, "Place", new ItemStack(XMaterial.GRASS_BLOCK.parseItem())), 10);
                     nInv.addItemStack(createItem(island, role, "Anvil", new ItemStack(Material.ANVIL)), 11);
                     nInv.addItemStack(createItem(island, role, "ArmorStandUse", new ItemStack(Material.ARMOR_STAND)),
                             12);

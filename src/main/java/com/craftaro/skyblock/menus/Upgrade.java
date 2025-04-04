@@ -3,7 +3,9 @@ package com.craftaro.skyblock.menus;
 import com.craftaro.core.compatibility.MajorServerVersion;
 import com.craftaro.core.compatibility.ServerVersion;
 import com.craftaro.core.hooks.economies.Economy;
+import com.craftaro.third_party.com.cryptomorin.xseries.XItemFlag;
 import com.craftaro.third_party.com.cryptomorin.xseries.XMaterial;
+import com.craftaro.third_party.com.cryptomorin.xseries.XPotion;
 import com.craftaro.third_party.com.cryptomorin.xseries.XSound;
 import com.craftaro.core.utils.NumberUtils;
 import com.craftaro.skyblock.SkyBlock;
@@ -148,7 +150,7 @@ public class Upgrade {
                                             false);
 
                                     for (Player all : islandManager.getPlayersAtIsland(island)) {
-                                        all.removePotionEffect(PotionEffectType.JUMP);
+                                        all.removePotionEffect(XPotion.JUMP_BOOST.getPotionEffectType());
                                     }
                                 } else {
                                     island.setUpgrade(player, com.craftaro.skyblock.upgrade.Upgrade.Type.JUMP,
@@ -500,7 +502,7 @@ public class Upgrade {
                         PotionMeta pm = (PotionMeta) potion.getItemMeta();
 
                         if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_10)) {
-                            pm.setBasePotionData(new PotionData(PotionType.SPEED));
+                            pm.setBasePotionData(new PotionData(XPotion.SPEED.getPotionType()));
                         } else {
                             pm.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 1, 0), true);
                         }
@@ -519,7 +521,7 @@ public class Upgrade {
                                         new Placeholder("%cost", NumberUtils.formatNumber(upgrade.getCost())),
                                         new Placeholder("%status",
                                                 getStatus(island, com.craftaro.skyblock.upgrade.Upgrade.Type.SPEED))},
-                                null, new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 0);
+                                null, new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 0);
                     } else {
                         if (economy.hasBalance(player, upgrade.getCost())) {
                             nInv.addItem(nInv.createItem(potion,
@@ -528,7 +530,7 @@ public class Upgrade {
                                     configLoad.getStringList("Menu.Upgrade.Item.Speed.Claimable.Lore"),
                                     new Placeholder[]{
                                             new Placeholder("%cost", NumberUtils.formatNumber(upgrade.getCost()))},
-                                    null, new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 0);
+                                    null, new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 0);
                         } else {
                             nInv.addItem(nInv.createItem(potion,
                                     ChatColor.translateAlternateColorCodes('&',
@@ -536,7 +538,7 @@ public class Upgrade {
                                     configLoad.getStringList("Menu.Upgrade.Item.Speed.Unclaimable.Lore"),
                                     new Placeholder[]{
                                             new Placeholder("%cost", NumberUtils.formatNumber(upgrade.getCost()))},
-                                    null, new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 0);
+                                    null, new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 0);
                         }
                     }
                 }
@@ -553,9 +555,13 @@ public class Upgrade {
                         PotionMeta pm = (PotionMeta) potion.getItemMeta();
 
                         if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_9)) {
-                            pm.setBasePotionData(new PotionData(PotionType.JUMP));
+                            if (MajorServerVersion.isServerVersionAtOrBelow(MajorServerVersion.V1_20) && ServerVersion.isServerVersionBelow(ServerVersion.V1_20_6)) {
+                                pm.setBasePotionData(new PotionData(XPotion.JUMP_BOOST.getPotionType()));
+                            } else {
+                                pm.setBasePotionType(XPotion.JUMP_BOOST.getPotionType());
+                            }
                         } else {
-                            pm.addCustomEffect(new PotionEffect(PotionEffectType.JUMP, 1, 0), true);
+                            pm.addCustomEffect(new PotionEffect(XPotion.JUMP_BOOST.getPotionEffectType(), 1, 0), true);
                         }
 
                         potion.setItemMeta(pm);
@@ -572,7 +578,7 @@ public class Upgrade {
                                         new Placeholder("%cost", NumberUtils.formatNumber(upgrade.getCost())),
                                         new Placeholder("%status",
                                                 getStatus(island, com.craftaro.skyblock.upgrade.Upgrade.Type.JUMP))},
-                                null, new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 1);
+                                null, new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 1);
                     } else {
                         if (economy.hasBalance(player, upgrade.getCost())) {
                             nInv.addItem(nInv.createItem(potion,
@@ -581,7 +587,7 @@ public class Upgrade {
                                     configLoad.getStringList("Menu.Upgrade.Item.Jump.Claimable.Lore"),
                                     new Placeholder[]{
                                             new Placeholder("%cost", NumberUtils.formatNumber(upgrade.getCost()))},
-                                    null, new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 1);
+                                    null, new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 1);
                         } else {
                             nInv.addItem(nInv.createItem(potion,
                                     ChatColor.translateAlternateColorCodes('&',
@@ -589,7 +595,7 @@ public class Upgrade {
                                     configLoad.getStringList("Menu.Upgrade.Item.Jump.Unclaimable.Lore"),
                                     new Placeholder[]{
                                             new Placeholder("%cost", NumberUtils.formatNumber(upgrade.getCost()))},
-                                    null, new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 1);
+                                    null, new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 1);
                         }
                     }
                 }

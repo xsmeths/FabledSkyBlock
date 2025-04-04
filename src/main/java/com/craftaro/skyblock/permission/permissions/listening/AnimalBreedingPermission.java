@@ -39,7 +39,8 @@ public class AnimalBreedingPermission extends ListeningPermission {
                     || XMaterial.HAY_BLOCK.isSimilar(is))) {
                 return;
             }
-        } else if (entity.getType() == EntityType.SHEEP || entity.getType() == EntityType.COW || entity.getType() == EntityType.MUSHROOM_COW) {
+        } else if (entity.getType() == EntityType.SHEEP || entity.getType() == EntityType.COW
+                || entity.getType().toString().equals("MUSHROOM_COW") || entity.getType().toString().equals("MOOSHROOM")) {
             if (!(XMaterial.WHEAT.isSimilar(is))) {
                 return;
             }

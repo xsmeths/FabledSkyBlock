@@ -2,6 +2,7 @@ package com.craftaro.skyblock.listeners;
 
 import com.craftaro.core.compatibility.MajorServerVersion;
 import com.craftaro.core.compatibility.ServerVersion;
+import com.craftaro.third_party.com.cryptomorin.xseries.XAttribute;
 import com.craftaro.third_party.com.cryptomorin.xseries.XSound;
 import com.craftaro.skyblock.SkyBlock;
 import com.craftaro.skyblock.island.Island;
@@ -126,7 +127,7 @@ public class MoveListeners implements Listener {
                                     player.setExp(0.0F);
 
                                     if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_9)) {
-                                        player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).getValue());
+                                        player.setHealth(Objects.requireNonNull(player.getAttribute(XAttribute.MAX_HEALTH.get())).getValue());
                                     } else {
                                         player.setHealth(player.getMaxHealth());
                                     }

@@ -24,7 +24,7 @@ public class BoatPermission extends ListeningPermission {
     public void onInteractEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
 
-        if (event.getRightClicked().getType() == EntityType.BOAT) {
+        if (event.getRightClicked().getType().toString().contains("BOAT")) {
             cancelAndMessage(event, player, this.plugin, this.messageManager);
         }
     }

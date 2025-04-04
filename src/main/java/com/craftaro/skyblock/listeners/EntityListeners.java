@@ -88,7 +88,7 @@ public class EntityListeners implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onFireWorkBoom(EntityDamageByEntityEvent event) {
-        if (event.getDamager().getType() == EntityType.FIREWORK
+        if (event.getDamager().getType().toString().contains("FIREWORK")
                 && this.plugin.getWorldManager().isIslandWorld(event.getEntity().getWorld())) {
             event.setCancelled(true);
         }

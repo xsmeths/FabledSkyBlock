@@ -3,7 +3,9 @@ package com.craftaro.skyblock.menus.admin;
 import com.craftaro.core.compatibility.MajorServerVersion;
 import com.craftaro.core.compatibility.ServerVersion;
 import com.craftaro.core.gui.AnvilGui;
+import com.craftaro.third_party.com.cryptomorin.xseries.XItemFlag;
 import com.craftaro.third_party.com.cryptomorin.xseries.XMaterial;
+import com.craftaro.third_party.com.cryptomorin.xseries.XPotion;
 import com.craftaro.third_party.com.cryptomorin.xseries.XSound;
 import com.craftaro.core.utils.NumberUtils;
 import com.craftaro.skyblock.SkyBlock;
@@ -243,7 +245,7 @@ public class Upgrade {
 
                 if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_13)) {
                     PotionMeta pm = (PotionMeta) speedPotion.getItemMeta();
-                    pm.setBasePotionData(new PotionData(PotionType.SPEED));
+                    pm.setBasePotionData(new PotionData(XPotion.SPEED.getPotionType()));
                     speedPotion.setItemMeta(pm);
                 } else {
                     speedPotion = new ItemStack(Material.POTION, 1, (short) 8194);
@@ -257,11 +259,11 @@ public class Upgrade {
                         new Placeholder[]{
                                 new Placeholder("%cost", NumberUtils.formatNumber(upgrade.getCost())),
                                 new Placeholder("%status", getStatus(upgrade))},
-                        null, new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 0);
+                        null, new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 0);
 
                 if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_13)) {
                     PotionMeta pm = (PotionMeta) jumpPotion.getItemMeta();
-                    pm.setBasePotionData(new PotionData(PotionType.JUMP));
+                    pm.setBasePotionData(new PotionData(XPotion.JUMP_BOOST.getPotionType()));
                     jumpPotion.setItemMeta(pm);
                 } else {
                     jumpPotion = new ItemStack(Material.POTION, 1, (short) 8203);
@@ -275,7 +277,7 @@ public class Upgrade {
                         new Placeholder[]{
                                 new Placeholder("%cost", NumberUtils.formatNumber(upgrade.getCost())),
                                 new Placeholder("%status", getStatus(upgrade))},
-                        null, new ItemFlag[]{ItemFlag.HIDE_POTION_EFFECTS}), 1);
+                        null, new ItemFlag[]{XItemFlag.HIDE_ADDITIONAL_TOOLTIP.get()}), 1);
 
                 upgrade = upgradeManager.getUpgrades(com.craftaro.skyblock.upgrade.Upgrade.Type.CROP).get(0);
                 nInv.addItem(nInv.createItem(XMaterial.WHEAT_SEEDS.parseItem(),
