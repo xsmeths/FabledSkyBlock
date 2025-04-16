@@ -35,13 +35,42 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Levelling {
+    // Static cache that persists for the lifetime of the plugin
+    private static final Map<String, Boolean> MATERIAL_VALIDITY_CACHE = new HashMap<>();
+
+    // We are going to filter these items out. They are not valid for levelling.
+    private static final Set<String> NON_ITEM_MATERIALS = new HashSet<>(Arrays.asList(
+            "ATTACHED_MELON_STEM", "ATTACHED_PUMPKIN_STEM", "BAMBOO_SAPLING", "BEETROOTS",
+            "BIRCH_WALL_SIGN", "BLACK_WALL_BANNER", "BLUE_WALL_BANNER", "BRAIN_CORAL_WALL_FAN",
+            "BROWN_WALL_BANNER", "BUBBLE_COLUMN", "BUBBLE_CORAL_WALL_FAN", "CARROTS",
+            "CAVE_AIR", "COCOA", "CREEPER_WALL_HEAD", "CRIMSON_WALL_SIGN",
+            "CYAN_WALL_BANNER", "DARK_OAK_WALL_SIGN", "DEAD_BRAIN_CORAL_WALL_FAN",
+            "DEAD_BUBBLE_CORAL_WALL_FAN", "DEAD_FIRE_CORAL_WALL_FAN", "DEAD_HORN_CORAL_WALL_FAN",
+            "DEAD_TUBE_CORAL_WALL_FAN", "DRAGON_WALL_HEAD", "END_GATEWAY", "END_PORTAL",
+            "FIRE", "FIRE_CORAL_WALL_FAN", "FROSTED_ICE", "GRAY_WALL_BANNER",
+            "GREEN_WALL_BANNER", "HORN_CORAL_WALL_FAN", "JUNGLE_WALL_SIGN", "KELP_PLANT",
+            "LIGHT_BLUE_WALL_BANNER", "LIGHT_GRAY_WALL_BANNER", "LIME_WALL_BANNER",
+            "MAGENTA_WALL_BANNER", "MELON_STEM", "MOVING_PISTON", "NETHER_PORTAL",
+            "OAK_WALL_SIGN", "ORANGE_WALL_BANNER", "PINK_WALL_BANNER", "PISTON_HEAD",
+            "PLAYER_WALL_HEAD", "POTATOES", "POTTED_ACACIA_SAPLING", "POTTED_ALLIUM",
+            "POTTED_AZURE_BLUET", "POTTED_BAMBOO", "POTTED_BIRCH_SAPLING", "POTTED_BLUE_ORCHID",
+            "POTTED_BROWN_MUSHROOM", "POTTED_CACTUS", "POTTED_CORNFLOWER", "POTTED_DANDELION",
+            "POTTED_DARK_OAK_SAPLING", "POTTED_DEAD_BUSH", "POTTED_FERN", "POTTED_JUNGLE_SAPLING",
+            "POTTED_LILY_OF_THE_VALLEY", "POTTED_OAK_SAPLING", "POTTED_ORANGE_TULIP",
+            "POTTED_OXEYE_DAISY", "POTTED_PINK_TULIP", "POTTED_POPPY", "POTTED_RED_MUSHROOM",
+            "POTTED_RED_TULIP", "POTTED_SPRUCE_SAPLING", "POTTED_WHITE_TULIP", "POTTED_WITHER_ROSE",
+            "PUMPKIN_STEM", "PURPLE_WALL_BANNER", "REDSTONE_WALL_TORCH", "REDSTONE_WIRE",
+            "RED_WALL_BANNER", "SKELETON_WALL_SKULL", "SOUL_WALL_TORCH", "SPRUCE_WALL_SIGN",
+            "SWEET_BERRY_BUSH", "TALL_SEAGRASS", "TRIPWIRE", "TUBE_CORAL_WALL_FAN",
+            "TWISTING_VINES_PLANT", "VOID_AIR", "WALL_TORCH", "WARPED_WALL_SIGN",
+            "WEEPING_VINES_PLANT", "WHITE_WALL_BANNER", "WITHER_SKELETON_WALL_SKULL",
+            "YELLOW_WALL_BANNER", "ZOMBIE_WALL_HEAD"
+    ));
+
     private static Levelling instance;
 
     public static Levelling getInstance() {
@@ -189,9 +218,13 @@ public class Levelling {
             }
 
             long value = testIslandMaterials.get(materialName);
+
+            // Check material validity from cache first
+            if (!isValidItemMaterial(materialName)) {
+                continue;
+            }
+
             Optional<XMaterial> materials = CompatibleMaterial.getMaterial(materialName);
-
-
             if (!materials.isPresent()) {
                 continue;
             }
@@ -305,5 +338,30 @@ public class Levelling {
         nInv.setRows(6);
 
         Bukkit.getServer().getScheduler().runTask(plugin, nInv::open);
+    }
+
+    private boolean isValidItemMaterial(String materialName) {
+        // Check cache first
+        if (MATERIAL_VALIDITY_CACHE.containsKey(materialName)) {
+            return MATERIAL_VALIDITY_CACHE.get(materialName);
+        }
+        // If not in cache, perform the check
+        boolean isValid = true;
+        if (NON_ITEM_MATERIALS.contains(materialName)) {
+            isValid = false;
+        } else {
+            Optional<XMaterial> materials = CompatibleMaterial.getMaterial(materialName);
+            if (!materials.isPresent()) {
+                isValid = false;
+            } else {
+                Material bukkitMaterial = materials.get().parseMaterial();
+                if (bukkitMaterial == null || !bukkitMaterial.isItem()) {
+                    isValid = false;
+                }
+            }
+        }
+        // Cache
+        MATERIAL_VALIDITY_CACHE.put(materialName, isValid);
+        return isValid;
     }
 }
