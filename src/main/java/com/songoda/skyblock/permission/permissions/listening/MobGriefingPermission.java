@@ -5,12 +5,7 @@ import com.songoda.skyblock.SkyBlock;
 import com.songoda.skyblock.permission.ListeningPermission;
 import com.songoda.skyblock.permission.PermissionHandler;
 import com.songoda.skyblock.permission.PermissionType;
-import org.bukkit.entity.IronGolem;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Snowman;
-import org.bukkit.entity.TNTPrimed;
-import org.bukkit.entity.Wolf;
+import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -82,7 +77,7 @@ public class MobGriefingPermission extends ListeningPermission {
 
     @PermissionHandler
     public void onMobChangeBlock(EntityChangeBlockEvent event) {
-        if (event.getEntity() instanceof LivingEntity && !(event.getEntity() instanceof Player)) {
+        if (event.getEntity() instanceof LivingEntity && !(event.getEntity() instanceof Player) && !(event.getEntity() instanceof Animals)) {
             event.setCancelled(true);
         }
     }
