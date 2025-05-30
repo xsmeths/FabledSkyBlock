@@ -203,6 +203,10 @@ public class PermissionManager {
             registerPermission(new SignEditPermission(plugin));
         }
 
+        if (MajorServerVersion.isServerVersionAtLeast(MajorServerVersion.V1_21)) {
+            registerPermission(new CrafterPermission(plugin));
+        }
+
         this.registeredHandlers = this.registeredHandlers.stream()
                 .sorted(Comparator.comparingInt(h -> h.getHandler().getAnnotation(PermissionHandler.class).priority().ordinal()))
                 .collect(Collectors.toList());
